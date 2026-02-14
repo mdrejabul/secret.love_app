@@ -371,4 +371,111 @@
 
         // --- SETTINGS & EDIT ---
         window.openSettings = function() { window.nav('settings-screen'); }
-        window.openEditProfile = function() { window.nav('edit-screen')
+        window.openEditProfile = function() { window.nav('edit-screen'); }
+
+        window.updateProfile = async function() {
+            myData.name = document.getElementById('edit-name').value;
+            myData.bio = document.getElementById('edit-bio').value;
+            myData.img = document.getElementById('edit-img').src;
+            
+            try {
+                await set(ref(db, "users/" + auth.currentUser.uid), myData);
+                alert("Saved!");
+            } catch(e) { alert("Saved Locally (DB Error)"); }
+            
+            updateUIWithData();
+            window.nav('settings-screen');
+        }
+
+        window.handleFile = function(inputId, imgId) {
+            const file = document.getElementById(inputId).files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById(imgId).src = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- CHAT SYSTEM ---
+        window.addPartner = function() {
+            const pid = document.getElementById('pid-input').value.trim();
+            if(!pid) return;
+            
+            let partners = JSON.parse(localStorage.getItem('sl_partners') || '[]');
+            if(!partners.find(p => p.id === pid)) {
+                partners.push({ id: pid, name: "Partner " + pid.substr(3,4) });
+                localStorage.setItem('sl_partners', JSON.stringify(partners));
+            }
+            document.getElementById('add-modal').style.display = 'none';
+            renderChatList();
+        }
+
+        function renderChatList() {
+            const list = document.getElementById('chat-list');
+            const partners = JSON.parse(localStorage.getItem('sl_partners') || '[]');
+            
+            if(partners.length === 0) {
+                list.innerHTML = `<p style="text-align: center; color: #444; margin-top: 50px;">No chats yet.<br>Click + to add.</p>`;
+                return;
+            }
+            
+            list.innerHTML = "";
+            partners.forEach(p => {
+                const div = document.createElement('div');
+                div.style = "display:flex; align-items:center; background:#1a1a1a; padding:15px; border-radius:15px; margin-bottom:10px; border:1px solid #333;";
+                div.innerHTML = `
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width:50px; height:50px; border-radius:50%; margin-right:15px;">
+                    <div>
+                        <h4 style="color:white;">${p.id}</h4>
+                        <p style="color:#666; font-size:12px;">Tap to chat</p>
+                    </div>
+                `;
+                div.onclick = () => openChat(p);
+                list.appendChild(div);
+            });
+        }
+
+        function openChat(p) {
+            currentPartner = p;
+            document.getElementById('chat-partner-name').innerText = p.id;
+            window.nav('chat-screen');
+            document.getElementById('chat-body').innerHTML = "";
+            
+            const chatID = myData.id < p.id ? myData.id + "_" + p.id : p.id + "_" + myData.id;
+            
+            if(activeChatRef) activeChatRef.off();
+            activeChatRef = ref(db, 'chats/' + chatID);
+            
+            onChildAdded(activeChatRef, (snap) => {
+                const data = snap.val();
+                const div = document.createElement('div');
+                div.className = 'msg ' + (data.sender === myData.id ? 'my-msg' : 'other-msg');
+                div.innerText = data.text;
+                document.getElementById('chat-body').appendChild(div);
+                document.getElementById('chat-body').scrollTop = 10000;
+            });
+        }
+
+        window.sendMsg = function() {
+            const txt = document.getElementById('msg-input').value;
+            if(!txt) return;
+            
+            const chatID = myData.id < currentPartner.id ? myData.id + "_" + currentPartner.id : currentPartner.id + "_" + myData.id;
+            push(ref(db, 'chats/' + chatID), { sender: myData.id, text: txt });
+            document.getElementById('msg-input').value = "";
+        }
+
+        window.fillMsg = function(txt) {
+            document.getElementById('msg-input').value = txt;
+        }
+
+        // --- CALL SIMULATION ---
+        window.startCall = function(type) {
+            document.getElementById('call-status').innerText = type + " Calling...";
+            document.getElementById('call-name').innerText = currentPartner.id;
+            window.nav('call-screen');
+        }
+
+    </script>
+</body>
+</html>
