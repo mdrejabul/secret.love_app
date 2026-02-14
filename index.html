@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secret Love</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+        :root {
+            --primary: #ff0055;
+            --dark: #000000;
+            --card-bg: #111111;
+            --text-gray: #888888;
+            --text-white: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body { background-color: var(--dark); color: var(--text-white); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* --- UTILS --- */
+        .screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; display: none; flex-direction: column; background: var(--dark); overflow-y: auto; }
+        .flex-center { display: flex; align-items: center; justify-content: center; }
+        .full-width { width: 100%; }
+
+        /* --- BUTTONS & INPUTS --- */
+        .btn-primary {
+            background: var(--primary); color: white; border: none; padding: 16px; width: 85%; border-radius: 50px;
+            font-size: 18px; font-weight: 600; box-shadow: 0 0 25px rgba(255, 0, 85, 0.4); cursor: pointer; margin: 10px 0;
+            text-align: center;
+        }
+        .btn-outline {
+            background: transparent; border: 2px solid var(--primary); color: white; padding: 14px; width: 85%;
+            border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 0;
+        }
+        .btn-danger {
+            background: transparent; border: 2px solid red; color: red; padding: 14px; width: 85%;
+            border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 10px 0;
+        }
+        .input-box {
+            background: #1a1a1a; border: none; color: white; padding: 18px 25px; width: 85%;
+            border-radius: 50px; font-size: 16px; margin-bottom: 15px;
+        }
+
+        /* --- SPLASH --- */
+        #splash-screen { align-items: center; justify-content: center; }
+        .logo-glow { width: 100px; height: 100px; border-radius: 30px; border: 3px solid var(--primary); box-shadow: 0 0 40px var(--primary); margin-bottom: 30px; }
+        
+        /* --- HEADER --- */
+        .app-header {
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+            background: var(--dark); position: sticky; top: 0; z-index: 500;
+        }
+        .header-title { color: var(--primary); font-size: 24px; font-weight: 700; }
+        .profile-icon { width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); object-fit: cover; }
+
+        /* --- SETTINGS ITEMS --- */
+        .settings-item {
+            display: flex; align-items: center; padding: 20px; border-bottom: 1px solid #222; cursor: pointer; width: 100%;
+        }
+        .settings-item i { font-size: 22px; color: #666; width: 40px; }
+        .settings-text { flex: 1; font-size: 16px; }
+
+        /* --- CHAT --- */
+        .chat-body { flex: 1; padding: 15px; padding-bottom: 150px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 20px 20px; }
+        .msg { max-width: 75%; padding: 12px 18px; border-radius: 20px; font-size: 15px; position: relative; }
+        .my-msg { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 5px; }
+        .other-msg { align-self: flex-start; background: #222; border: 1px solid #333; border-bottom-left-radius: 5px; }
+        
+        /* --- CHAT FOOTER --- */
+        .chat-footer {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: black; padding: 10px;
+            display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #222;
+        }
+        .quick-replies { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .chip { background: #222; padding: 8px 15px; border-radius: 20px; font-size: 13px; white-space: nowrap; border: 1px solid #333; }
+        .input-area { display: flex; align-items: center; gap: 10px; }
+        .chat-input { flex: 1; background: #222; border: none; padding: 14px; border-radius: 30px; color: white; }
+        .send-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; border: none; }
+
+        /* --- FAB --- */
+        .fab { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; color: white; box-shadow: 0 0 25px var(--primary); z-index: 900; cursor: pointer; }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .modal-box { background: #111; width: 85%; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #333; }
+
+        /* --- CALL SCREEN --- */
+        #call-screen { background: linear-gradient(to bottom, #111, #000); align-items: center; justify-content: center; z-index: 3000; }
+        .pulse-ring { width: 150px; height: 150px; border-radius: 50%; border: 2px solid var(--primary); box-shadow: 0 0 30px var(--primary); animation: pulse 2s infinite; display:flex; align-items:center; justify-content:center; margin-bottom: 50px;}
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen" class="screen" style="display: flex;">
+        <img src="https://cdn-icons-png.flaticon.com/512/2107/2107952.png" class="logo-glow">
+        <h1 style="margin-bottom: 40px;">Secret Love</h1>
+        <button class="btn-primary" onclick="window.nav('login-screen')">Get Started</button>
+    </div>
+
+    <div id="login-screen" class="screen" style="align-items: center; justify-content: center;">
+        <h2 style="color: var(--primary); margin-bottom: 30px;">Welcome</h2>
+        <input type="email" id="login-email" class="input-box" placeholder="Email">
+        <input type="password" id="login-pass" class="input-box" placeholder="Password">
+        
+        <div style="width: 85%; display: flex; gap: 10px;">
+            <button class="btn-primary" onclick="window.doLogin()" style="flex:1;">Login</button>
+            <button class="btn-outline" onclick="window.nav('register-screen')" style="flex:1;">Register</button>
+        </div>
+        <p style="color: #666; margin-top: 20px;" onclick="window.resetPass()">Forgot Password?</p>
+    </div>
+
+    <div id="register-screen" class="screen" style="align-items: center; justify-content: center;">
+        <h2 style="color: var(--primary); margin-bottom: 30px;">Register</h2>
+        <input type="email" id="reg-email" class="input-box" placeholder="Email">
+        <input type="password" id="reg-pass" class="input-box" placeholder="Password">
+        <button class="btn-primary" onclick="window.doRegister()">Create Account</button>
+        <button class="btn-outline" onclick="window.nav('login-screen')">Back</button>
+    </div>
+
+    <div id="setup-screen" class="screen" style="align-items: center; justify-content: center;">
+        <h2 style="color: var(--primary);">Setup Profile</h2>
+        <div style="margin: 30px 0; position: relative;" onclick="document.getElementById('setup-file').click()">
+            <img id="setup-img" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+            <i class="fas fa-camera" style="position: absolute; bottom: 0; right: 0; background: var(--primary); padding: 8px; border-radius: 50%; font-size: 14px;"></i>
+        </div>
+        <input type="file" id="setup-file" hidden accept="image/*" onchange="window.handleFile('setup-file', 'setup-img')">
+        <input type="text" id="setup-name" class="input-box" placeholder="Enter Your Name">
+        <input type="text" id="setup-bio" class="input-box" placeholder="Enter Your Bio">
+        <button class="btn-primary" onclick="window.saveInitialProfile()">Start</button>
+    </div>
+
+    <div id="main-app" class="screen">
+        <div class="app-header">
+            <div class="header-title">Secret Love</div>
+            <img id="home-avatar" src="" class="profile-icon" onclick="window.openSettings()">
+        </div>
+        
+        <div id="chat-list" style="padding: 20px;">
+            <p style="text-align: center; color: #444; margin-top: 50px;">No chats yet.<br>Click + to add.</p>
+        </div>
+
+        <div class="fab" onclick="document.getElementById('add-modal').style.display='flex'">+</div>
+    </div>
+
+    <div id="settings-screen" class="screen">
+        <div class="app-header">
+            <i class="fas fa-arrow-left" style="font-size: 24px;" onclick="window.nav('main-app')"></i>
+            <h3 style="flex:1; text-align: center;">Settings</h3>
+            <div style="width: 24px;"></div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; padding: 30px 0; border-bottom: 1px solid #222;">
+            <img id="settings-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 15px; object-fit: cover;" onclick="window.openEditProfile()">
+            <h3 id="settings-name">Name</h3>
+            <p id="settings-id" style="color: var(--primary); margin-top: 5px;">ID: Loading...</p>
+        </div>
+
+        <div class="settings-item">
+            <i class="fas fa-ban"></i>
+            <div class="settings-text">Blocked Users</div>
+        </div>
+        <div class="settings-item">
+            <i class="fas fa-key"></i>
+            <div class="settings-text">Account</div>
+        </div>
+        <div class="settings-item">
+            <i class="fas fa-lock"></i>
+            <div class="settings-text">Privacy</div>
+        </div>
+    </div>
+
+    <div id="edit-screen" class="screen" style="align-items: center; padding-top: 50px;">
+        <div style="width: 100%; padding: 0 20px; margin-bottom: 20px;">
+            <i class="fas fa-times" style="font-size: 24px; float: right;" onclick="window.nav('settings-screen')"></i>
+            <h3 style="color: var(--primary);">Edit Profile</h3>
+        </div>
+
+        <div style="margin-bottom: 30px;" onclick="document.getElementById('edit-file').click()">
+            <img id="edit-img" src="" style="width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--primary); object-fit: cover;">
+        </div>
+        <input type="file" id="edit-file" hidden accept="image/*" onchange="window.handleFile('edit-file', 'edit-img')">
+
+        <input type="text" id="edit-name" class="input-box" placeholder="Name">
+        <input type="text" id="edit-bio" class="input-box" placeholder="Bio">
+        
+        <button class="btn-primary" onclick="window.updateProfile()">SAVE</button>
+        <button class="btn-outline" onclick="window.doLogout()">LOG OUT</button>
+        <button class="btn-danger" onclick="window.resetApp()">RESET APP</button>
+    </div>
+
+    <div id="chat-screen" class="screen">
+        <div class="app-header">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <i class="fas fa-arrow-left" style="font-size: 22px;" onclick="window.nav('main-app')"></i>
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width: 40px; height: 40px; border-radius: 50%;">
+                <div>
+                    <h4 id="chat-partner-name">User</h4>
+                    <span style="font-size: 12px; color: var(--primary);">Online</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px;">
+                <i class="fas fa-phone" onclick="window.startCall('Voice')"></i>
+                <i class="fas fa-video" onclick="window.startCall('Video')"></i>
+            </div>
+        </div>
+
+        <div id="chat-body" class="chat-body"></div>
+
+        <div class="chat-footer">
+            <div class="quick-replies">
+                <div class="chip" onclick="window.fillMsg('Hello ❤️')">Hello ❤️</div>
+                <div class="chip" onclick="window.fillMsg('Ki korcho?')">Ki korcho?</div>
+                <div class="chip" onclick="window.fillMsg('Kemon acho?')">Kemon acho?</div>
+                <div class="chip" onclick="window.fillMsg('Miss you 🥺')">Miss you 🥺</div>
+            </div>
+            <div class="input-area">
+                <i class="fas fa-camera" style="font-size: 22px; color: #666;"></i>
+                <input type="text" id="msg-input" class="chat-input" placeholder="Type a message...">
+                <button class="send-btn" onclick="window.sendMsg()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 style="color: white; margin-bottom: 20px;">Add Partner</h3>
+            <input type="text" id="pid-input" class="input-box" placeholder="Paste Secret ID" style="width: 100%;">
+            <button class="btn-primary" onclick="window.addPartner()" style="width: 100%;">CONNECT</button>
+            <button class="btn-outline" onclick="document.getElementById('add-modal').style.display='none'" style="width: 100%; border-color: #333; color: #888;">CANCEL</button>
+        </div>
+    </div>
+
+    <div id="call-screen" class="screen">
+        <div class="pulse-ring">
+            <img id="call-avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" style="width: 140px; height: 140px; border-radius: 50%; object-fit: cover;">
+        </div>
+        <h2 id="call-status">Calling...</h2>
+        <h3 id="call-name" style="color: var(--primary); margin-top: 10px;">Partner</h3>
+        
+        <div style="display: flex; gap: 30px; margin-top: 50px;">
+            <button style="width: 60px; height: 60px; border-radius: 50%; background: red; border: none; color: white; font-size: 24px;" onclick="window.nav('chat-screen')"><i class="fas fa-phone-slash"></i></button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getDatabase, ref, set, get, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDSzTThXe9Nw1RG1zvfEWwkI5frlNOHYzA",
+          authDomain: "secret-love-c8d57.firebaseapp.com",
+          databaseURL: "https://secret-love-c8d57-default-rtdb.firebaseio.com",
+          projectId: "secret-love-c8d57",
+          storageBucket: "secret-love-c8d57.firebasestorage.app",
+          messagingSenderId: "249630233117",
+          appId: "1:249630233117:web:7e3b3380d05deb59272cf4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let myData = { id: null, name: "", bio: "", img: "" };
+        let currentPartner = null;
+        let activeChatRef = null;
+
+        // --- NAVIGATION ---
+        window.nav = function(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+            document.getElementById(screenId).style.display = 'flex';
+        }
+
+        // --- AUTH ---
+        window.doLogin = function() {
+            const e = document.getElementById("login-email").value;
+            const p = document.getElementById("login-pass").value;
+            if(!e || !p) return alert("Fill all fields");
+            
+            signInWithEmailAndPassword(auth, e, p)
+                .then(cred => loadUser(cred.user))
+                .catch(err => alert(err.message));
+        }
+
+        window.doRegister = function() {
+            const e = document.getElementById("reg-email").value;
+            const p = document.getElementById("reg-pass").value;
+            if(!e || !p) return alert("Fill all fields");
+
+            createUserWithEmailAndPassword(auth, e, p)
+                .then(cred => {
+                    alert("Account Created!");
+                    window.nav('setup-screen');
+                })
+                .catch(err => alert(err.message));
+        }
+
+        window.doLogout = function() {
+            signOut(auth).then(() => {
+                localStorage.clear();
+                window.location.reload();
+            });
+        }
+
+        window.resetApp = function() {
+            if(confirm("Reset App? This clears local data.")) {
+                localStorage.clear();
+                window.location.reload();
+            }
+        }
+
+        // --- DATA HANDLING ---
+        async function loadUser(user) {
+            const refUser = ref(db, "users/" + user.uid);
+            try {
+                const snap = await get(refUser);
+                if(snap.exists()) {
+                    myData = snap.val();
+                    updateUIWithData();
+                    window.nav('main-app');
+                    renderChatList();
+                } else {
+                    window.nav('setup-screen');
+                }
+            } catch(e) {
+                // If DB locked, use local bypass for demo
+                alert("Database Locked (Check Rules). Using Offline Mode.");
+                window.nav('setup-screen');
+            }
+        }
+
+        window.saveInitialProfile = async function() {
+            const name = document.getElementById("setup-name").value;
+            const bio = document.getElementById("setup-bio").value;
+            const img = document.getElementById("setup-img").src;
+            
+            if(!name) return alert("Name required");
+            
+            // Generate ID
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let pid = 'SL-';
+            for(let i=0; i<8; i++) pid += chars.charAt(Math.floor(Math.random()*chars.length));
+            
+            myData = { name, bio, img, id: pid, email: auth.currentUser.email };
+            
+            // Save to DB
+            try {
+                await set(ref(db, "users/" + auth.currentUser.uid), myData);
+            } catch(e) { console.log("DB Save Error (Rules?)"); }
+            
+            updateUIWithData();
+            window.nav('main-app');
+        }
+
+        function updateUIWithData() {
+            // Home
+            document.getElementById('home-avatar').src = myData.img;
+            // Settings
+            document.getElementById('settings-avatar').src = myData.img;
+            document.getElementById('settings-name').innerText = myData.name;
+            document.getElementById('settings-id').innerText = "ID: " + myData.id;
+            // Edit
+            document.getElementById('edit-img').src = myData.img;
+            document.getElementById('edit-name').value = myData.name;
+            document.getElementById('edit-bio').value = myData.bio;
+        }
+
+        // --- SETTINGS & EDIT ---
+        window.openSettings = function() { window.nav('settings-screen'); }
+        window.openEditProfile = function() { window.nav('edit-screen')
